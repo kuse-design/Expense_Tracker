@@ -1,6 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
 
-db = SQLAlchemy()
+from app.Database.database import db
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -9,11 +8,4 @@ class User(db.Model):
     password = db.Column(db.String(75), nullable=False)
 
     expenses = db.relationship("Expense", backref="user", lazy=True)
-
-    def __repr__(self):
-        return f"<User {self.email}>"
-
-    def to_dict(self):
-        return {"id": self.id, "email": self.email}
-
 

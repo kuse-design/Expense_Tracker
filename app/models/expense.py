@@ -1,7 +1,6 @@
 from datetime import datetime
-from flask_sqlalchemy import SQLAlchemy
 
-db = SQLAlchemy()
+from app.Database.database import db
 
 class Expense(db.Model):
     __tablename__ = "expense"
@@ -13,9 +12,3 @@ class Expense(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-    def __repr__(self):
-        return f"<Expense {self.amount} - {self.category}>"
-
-    def to_dict(self):
-        return {"id": self.id, "amount": self.amount, "category": self.category, "date": self.date.isoformat(),
-                "user_id": self.user_id}

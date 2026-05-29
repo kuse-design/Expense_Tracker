@@ -1,31 +1,39 @@
-from app.models.expense import db, Expense
+
+from app.Database.database import db
+from app.models.expense import Expense
+from app.exceptions.bad_request_exception import BadRequestException
+from app.exceptions.not_found_exception import NotFoundException
 from datetime import datetime
 
 def create_expense(request, user_id):
-    amount = request.get("amount")
-    category = request.get("category")
+    amount = request["amount"]
+    category = request["category"]
 
     if not amount or amount <= 0:
-        return {"error": "Invalid amount"}
+        raise BadRequestException("Invalid amount")
 
     if not category:
-        return {"error": "Invalid category"}
+        raise BadRequestException("Invalid category")
 
-    return  Expense(amount = amount, category = category, user_id = user_id)
+    expense = Expense(amount=amount, category=category, user_id=user_id)
+
+    db.session.add(expense)
+    db.session.commit()
+
+    return expense
 
 def get_expenses(user_id):
-    expenses = Expense.query.filter_by(user_id = user_id).all()
-    return [expense.to_dict() for expense in expenses]
+    return Expense.query.filter_by(user_id=user_id).all()
 
 def update_expense(expense_id, request, user_id):
     expense = Expense.query.filter_by(id=expense_id, user_id=user_id).first()
 
     if not expense:
-        return {"error": "Expense not found"}
+        raise NotFoundException("Expense not found")
 
     if "amount" in request:
         if request["amount"] <= 0:
-            return {"error": "Invalid amount"}
+            raise BadRequestException("Invalid amount")
         expense.amount = request["amount"]
 
     if "category" in request:
@@ -33,21 +41,18 @@ def update_expense(expense_id, request, user_id):
 
     db.session.commit()
 
-    return {
-        "message": "updated",
-        "expense": expense.to_dict()
-    }
+    return expense
+
 
 def delete_expense(expense_id, user_id):
-        expense = Expense.query.filter_by(id = expense_id, user_id = user_id).first()
+    expense = Expense.query.filter_by(id=expense_id, user_id=user_id).first()
 
-        if not expense:
-            return {"error": "Invalid expense not found"}
+    if not expense:
+        raise NotFoundException("Expense not found")
 
-        db.session.delete(expense)
-        db.session.commit()
+    db.session.delete(expense)
+    db.session.commit()
 
-        return {"message": "Delete successfully"}
 
 def filter_expense(user_id, category = None):
     query = Expense.query.filter_by(user_id = user_id).all()
